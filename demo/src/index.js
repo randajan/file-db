@@ -12,6 +12,14 @@ const fileDB = fdb({
     key: 'mysecretkey', // Optional encryption key
 });
 
+fileDB.on("beforeAddKey", (fdb, reencrypt)=>{
+    console.log("+ Event before addKey", {reencrypt});
+});
+
+fileDB.on("afterAddKey", (fdb, reencrypt, listOfErrors)=>{
+    console.log("+ Event after addKey", {reencrypt, listOfErrors});
+});
+
 (async function () {
 
     const savedUser = { name: 'John Doe', age: 30 };
