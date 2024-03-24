@@ -1,7 +1,7 @@
 
 import jet, { RunPool } from "@randajan/jet-core";
 import fse from "fs-extra";
-import { decryptObj, encryptObj } from "./crypto";
+import { saveFile, loadFile } from "./workers";
 
 const { solid } = jet.prop;
 
@@ -71,7 +71,7 @@ export class FileDB {
 
         let content;
         if (await this.exists(name)) {
-            content = decryptObj(await fse.readFile(this.toPath(name)), keys);
+            content = await loadFile(this.toPath(name), keys);
             if (!content) { throw Error(this.msg("load failed - content is unreadable", name)); }
         }
 
@@ -86,7 +86,7 @@ export class FileDB {
         if (!jet.isMapable(content)) { throw Error(this.msg("save failed - content must be mapable", name)); }
         if ((!force && !ready[name] && await this.exists(name))) { throw Error(this.msg("save failed - not loaded yet", name)); }
         
-        return fse.outputFile(this.toPath(name), encryptObj(content, keys[0]));
+        return saveFile(this.toPath(name), content, keys[0]);
     }
 
     async addKey(newKey, currentKey="", reencrypt=false) {

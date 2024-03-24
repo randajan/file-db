@@ -1,0 +1,13 @@
+const { parentPort, workerData } = require('worker_threads');
+const CryptoJS = require('crypto-js');
+const fse = require("fs-extra");
+
+const { path, content, key } = workerData;
+
+
+const enc = !key ? str : CryptoJS.AES.encrypt(JSON.stringify(content), key).toString();
+
+fse.outputFileSync(path, enc);
+
+parentPort.postMessage(true);
+process.exit(0);
