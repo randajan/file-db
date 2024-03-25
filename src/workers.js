@@ -13,7 +13,8 @@ const runWorker = async (path, data)=>{
         worker.on('message', resolve);
         worker.on('error', reject);
         worker.on('exit', (code) => {
-            if (code !== 0) { reject(new Error(`worker stopped with exit code ${code}`)); }
+            if (code === 0) { resolve(); }
+            else { reject(new Error(`worker stopped with exit code ${code}`)); }
         });
     });
 }

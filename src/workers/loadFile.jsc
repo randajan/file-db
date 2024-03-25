@@ -17,6 +17,5 @@ for (const key of keys) {
     }
 }
 
-parentPort.postMessage();
 process.exit(0);
 
