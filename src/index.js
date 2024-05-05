@@ -1,5 +1,6 @@
 
-import jet, { RunPool } from "@randajan/jet-core";
+import jet from "@randajan/jet-core";
+import RunPool from "@randajan/jet-core/runpool";
 import fse from "fs-extra";
 import { saveFile, loadFile } from "./workers";
 

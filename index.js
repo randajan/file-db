@@ -1,7 +1,7 @@
-import sapp from "@randajan/simple-lib";
+import sapp, { argv } from "@randajan/simple-lib";
 
 
-sapp(process.env.NODE_ENV==="prod", {
+sapp(argv.isBuild, {
     port:4002,
     mode:"node",
     external:["chalk"],
