@@ -15,7 +15,7 @@
   },
   "license": "MIT",
   "peerDependencies": {
-    "@randajan/jet-core": "^3.1.6",
+    "@randajan/jet-core": "^4.0.9",
     "crypto-js": "^4.2.0",
     "fs-extra": "^11.2.0"
   },
@@ -39,7 +39,5 @@
     "email": "jnranda@gmail.com",
     "url": "https://www.linkedin.com/in/randajan/"
   },
-  "dependencies": {
-    "@randajan/jet-core": "^4.0.9"
-  }
+  "dependencies": {}
 }
