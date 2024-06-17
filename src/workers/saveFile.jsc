@@ -4,8 +4,9 @@ const fse = require("fs-extra");
 
 const { path, content, key } = workerData;
 
+const json = JSON.stringify(content);
 
-const enc = !key ? str : CryptoJS.AES.encrypt(JSON.stringify(content), key).toString();
+const enc = !key ? json : CryptoJS.AES.encrypt(json, key).toString();
 
 fse.outputFileSync(path, enc);
 
