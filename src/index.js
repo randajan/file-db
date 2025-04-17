@@ -15,7 +15,6 @@ export class FileDB {
         const alias = String.jet.to(opt.alias) || root;
         const extension = String.jet.to(opt.extension) || "fdb";
         const key = String.jet.to(opt.key);
-        const slash = String.jet.to(opt.slash) || "/";
 
         const _p = {
             ready:{},
@@ -29,8 +28,7 @@ export class FileDB {
         solid.all(this, {
             alias,
             root,
-            extension,
-            slash
+            extension
         });
 
         if (!this.root) { throw Error(this.msg("opt 'root' is required to be set")); }
@@ -40,7 +38,7 @@ export class FileDB {
     }
 
     msg(text, name="*") {
-        return `FileDB '${this.alias}${this.slash}${name}.${this.extension}' ${text}`;
+        return `FileDB '${this.alias}/${name}.${this.extension}' ${text}`;
     }
 
     async rootEnsure() {
@@ -59,7 +57,7 @@ export class FileDB {
     }
 
     toPath(name) {
-        return `${this.root}${this.slash}${name}.${this.extension}`;
+        return path.join(this.root, `${name}.${this.extension}`);
     }
 
     async exists(name) {
