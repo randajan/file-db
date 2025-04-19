@@ -1,6 +1,6 @@
 {
   "name": "@randajan/file-db",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "FileDB is a simple Node.js tool for working with a File-based Database, allowing secure storage and retrieval of JSON data in encrypted files using AES encryption.",
   "repository": "randajan/file-db",
   "type": "module",
