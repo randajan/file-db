@@ -1,58 +1,34 @@
-
 import { info, log } from "@randajan/simple-lib/node";
-import fdb from "../../dist/index.js";
+import { FilesDB } from "../../dist/esm/index.mjs";
+import CryptoJS from "crypto-js";
 
+export const encrypt = (json, key) => {
+    if (!key) { return json; }
+    return CryptoJS.AES.encrypt(json, key).toString(); // výstup je string
+};
 
+export const decrypt = (raw, key) => {
+    if (!key) { return raw; }
+    const bytes = CryptoJS.AES.decrypt(raw, key);
+    return bytes.toString(CryptoJS.enc.Utf8); // výstup je původní string
+};
 
-// Create a new instance of FileDB
-const fileDB = fdb({
+const fdb = new FilesDB({
     root: info.dir.root + "\\demo\\fdb", // Root directory for the database
-    alias: 'testDB', // Optional alias for the database
     extension: 'fdb', // Optional file extension for the encrypted files
-    key: 'mysecretkey', // Optional encryption key
+    encrypt,
+    decrypt
 });
 
-fileDB.on("beforeAddKey", (fdb, reencrypt)=>{
-    console.log("+ Event before addKey", {reencrypt});
-});
 
-fileDB.on("afterAddKey", (fdb, reencrypt, listOfErrors)=>{
-    console.log("+ Event after addKey", {reencrypt, listOfErrors});
-});
+(async ()=>{
+    const users = fdb.file("users");
+    fdb.setKey("srre");
 
-(async function () {
-
-    const savedUser = { name: 'John Doe', age: 30 };
-
-    // Test1 saving data before load 
-    try { await fileDB.save('user', savedUser); }
-    catch (notLoadedYetError) { console.log("TEST1", {notLoadedYetError}); }
-
-    // Test2 add a new encryption key with incorrect current key
-    const newKey = 'newsecretkey';
-    const incorectKey = 'incorectkey';
-    try { await fileDB.addKey(newKey, incorectKey); }
-    catch (incorrectKeyError) { console.log("TEST2", {incorrectKeyError}); }
-
-    // Test3 add a new encryption key and reencrypt database
-    const currentKey = 'mysecretkey';
-    const reencryptErrors = await fileDB.addKey(newKey, currentKey, true);
-    console.log("TEST3", { reencryptErrors });
-
-    // Test4 loading data
-    const loadedUser = await fileDB.load('user');
-    console.log("TEST4", { savedUser, loadedUser });
-
-    // Test5 loading not existing data
-    const notExistDataLoad = await fileDB.load('notExist');
-    console.log("TEST5", { notExistDataLoad });
-
-    // Test6 add a new encryption key and reencrypt database back
-    const reencryptBackErrors = await fileDB.addKey(currentKey, newKey, true);
-    console.log("TEST6", { reencryptBackErrors });
-
+    const usr = await users.index();
+    console.log("A", usr);
+    await users.write({ foo:"ssdsfsd-" }, "fodsa");
+    console.log("B", await users.index());
+    console.log(await fdb.changeKey("srre"));
+    console.log("exit")
 })();
-
-
-
-

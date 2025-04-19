@@ -14,13 +14,9 @@
     "build": "set NODE_ENV=prod&& node ./index.js"
   },
   "license": "MIT",
-  "peerDependencies": {
-    "@randajan/jet-core": "^4.0.9",
-    "crypto-js": "^4.2.0",
-    "fs-extra": "^11.2.0"
-  },
   "devDependencies": {
-    "@randajan/simple-lib": "^2.3.1"
+    "@randajan/simple-lib": "^3.0.2",
+    "crypto-js": "^4.2.0"
   },
   "files": [
     "dist",
@@ -39,5 +35,8 @@
     "email": "jnranda@gmail.com",
     "url": "https://www.linkedin.com/in/randajan/"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@randajan/sleep": "^0.1.0",
+    "@randajan/treelock": "^0.1.0"
+  }
 }
