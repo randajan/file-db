@@ -16,19 +16,22 @@ export const decrypt = (raw, key) => {
 const fdb = new FilesDB({
     root: info.dir.root + "\\demo\\fdb", // Root directory for the database
     extension: 'fdb', // Optional file extension for the encrypted files
-    encrypt,
-    decrypt
+    // encrypt,
+    // decrypt,
+    // key:"xxx"
 });
+
+const users = fdb.link("users");
 
 
 (async ()=>{
-    const users = fdb.file("users");
-    fdb.setKey("srre");
+    //fdb.addKey("srre");
 
     const usr = await users.index();
     console.log("A", usr);
-    await users.write({ foo:"ssdsfsd-" }, "fodsa");
+    await users.write({ id:"foo", value:"bak" });
     console.log("B", await users.index());
-    console.log(await fdb.changeKey("srre"));
+    //console.log(await fdb.addKey("srre"));
+    await users.optimize();
     console.log("exit")
 })();
