@@ -94,5 +94,5 @@ export class FileDB {
     async unlock(key) { return verifyFile(this, true, key); }
 
     async optimize() { return regenerateFile(this); }
-    async rekey(newKey) { return regenerateFile(this, true, newKey); }
+    async rekey(newKey, currentKey) { return regenerateFile(this, true, newKey, currentKey); }
 }

@@ -159,9 +159,10 @@ Attempts to decrypt and verify all linked files with the provided key.
 **Async & Treelock protected**  
 Regenerates all files to a compact form.
 
-#### `rekey(newKey: string): Promise<{ isOk: boolean, errors?: [string, Error][] }>`  
+#### `rekey(newKey: string, currentKey: string): Promise<{ isOk: boolean, errors?: [string, Error][] }>`  
 **Async & Treelock protected**  
 Regenerates and re-encrypts all files using a new key.
+Requires currentKey to be provided because of security.
 
 ---
 
@@ -213,9 +214,10 @@ Attempts to decrypt and verify the file with the provided key.
 **Async & Treelock protected**  
 Compacts the file to remove duplicate entries.
 
-#### `rekey(newKey: string): Promise<void>`  
+#### `rekey(newKey: string, currentKey: string): Promise<void>`  
 **Async & Treelock protected**  
 Regenerates the file using a new key.
+Requires currentKey to be provided because of security.
 
 ---
 
