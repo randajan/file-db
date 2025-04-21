@@ -24,6 +24,10 @@ export const verifyFiles = async (fdb, isCheckKey, key)=>{
     await fdb.map(async (file, name)=>{
         return verifyFile(file, isCheckKey, key).catch(err=>errors.push([name, err]));
     });
+
+    if (errors.length) { return { isOk:false, errors } }
+
+    if (isCheckKey) { _privates.get(fdb).key = key; }
     
-    return errors.length ? { isOk:false, errors } : { isOk:true }
+    return { isOk:true }
 }
