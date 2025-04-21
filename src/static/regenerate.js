@@ -8,7 +8,7 @@ const _regenerateFile = async (file, isReKey, key)=>{
 
     key = isReKey ? key : _p.key;
 
-    const encode = raw=>_p.encode(raw, key);
+    const encode = (body, id)=>_p.encode(id, body, key);
     const tmpPath = `${pathname}.tmp`;
 
     const res = {

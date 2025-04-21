@@ -26,11 +26,11 @@ const tasks = fdb.link("tasks");
 
 
 (async ()=>{
-    console.log("xxx", await fdb.unlock("X"));
+    console.log("xxx", await fdb.unlock());
 
     await Promise.all([
-        ...Array(100).fill("").map((_, i)=>users.write({ id:"user"+i, value:"value"+i })),
-        ...Array(100).fill("").map((_, i)=>tasks.write({ id:"user"+i, value:"value"+i }))
+        ...Array(100).fill("").map((_, i)=>users.write("user"+i, { id:"user"+i, value:"value"+i })),
+        ...Array(100).fill("").map((_, i)=>tasks.write("task"+i, { id:"task"+i, value:"value"+i }))
     ]);
 
     console.log("B", await users.index());

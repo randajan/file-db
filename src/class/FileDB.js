@@ -22,7 +22,6 @@ export class FileDB {
         _p.encoding = options.encoding ?? _pp.encoding;
         _p.encrypt = options.encrypt ?? _pp.encrypt;
         _p.decrypt = options.decrypt ?? _pp.decrypt;
-        _p.getId = options.getId ?? _pp.getId;
         _p.key = options.key ?? _pp.key;
         const ttl = _p.timeout = options.timeout ?? 500;
         _p.thread = _pp.thread.sub({ name, ttl, on:options.on });
@@ -33,13 +32,13 @@ export class FileDB {
         _p.error = new Error(`${msg} Never verified`)
 
         _p.decode = (line, key) => {
-            if (!line) { return; }
+            if (!line) { return []; }
             const json = safeDecrypt(_p.decrypt, line, key, `${msg} Line > ${line} <`);
             return fromJson(json, `${msg} Record > ${json} <`);
         }
 
-        _p.encode = (rec, key) => {
-            const json = JSON.stringify(rec);
+        _p.encode = (id, body, key) => {
+            const json = JSON.stringify(body == null ? [id] : [id, body]);
             return _p.encrypt(json, key);
         }
 
@@ -59,37 +58,37 @@ export class FileDB {
         _privates.set(this, _p);
     }
 
-    async write(record) {
+    async write(id, body) {
         const { pathname, encoding, encode, isReadable, error, key } = _privates.get(this);
         if (!isReadable) { throw error; }
-        const line = encode(record, key);
+        const line = encode(id, body, key);
         await fsp.appendFile(pathname, line + "\n", encoding);
     }
 
-    writeSync() {
+    writeSync(id, body) {
         const { pathname, encoding, encode, isReadable, error, key  } = _privates.get(this);
         if (!isReadable) { throw error; }
-        const line = encode(record, key);
+        const line = encode(id, body, key);
         fs.appendFileSync(pathname, line + "\n", encoding);
     }
 
     async map(exe) { return mapFile(this, exe); }
 
     async collect(collector, exe) {
-        await this.map((rec, id) => exe(collector, rec, id));
+        await this.map((body, id) => exe(collector, body, id));
         return collector;
     }
 
     async reduce(initialValue, exe) {
         let res = initialValue;
-        await this.map(async (rec, id) => res = await exe(res, rec, id));
+        await this.map(async (body, id) => res = await exe(res, body, id));
         return res;
     }
 
-    async values() { return this.map(rec => rec); }
-    async keys() { return this.map((rec, id) => id); }
-    async entries() { return this.map((rec, id) => [id, rec]); }
-    async index() { return this.collect({}, (c, rec, id) => c[id] = rec); }
+    async values() { return this.map(body => body); }
+    async keys() { return this.map((body, id) => id); }
+    async entries() { return this.map((body, id) => [id, body]); }
+    async index() { return this.collect({}, (c, body, id) => c[id] = body); }
 
     async verify() { return verifyFile(this); }
     async unlock(key) { return verifyFile(this, true, key); }

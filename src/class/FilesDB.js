@@ -19,7 +19,6 @@ export class FilesDB {
         _p.encoding = options.encoding ?? "utf8";
         _p.encrypt = options.encrypt ?? (json=>json);
         _p.decrypt = options.decrypt ?? (json=>json);
-        _p.getId = options.getId ?? (rec=>rec.id);
         _p.key = options.key;
         const ttl = _p.timeout = options.timeout ?? 30000;
         _p.thread = createLock({ name, ttl, on:options.on });

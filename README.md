@@ -47,7 +47,7 @@ const users = fdb.link("users");
 
 await fdb.unlock("secret-key");
 
-await users.write({ id: "john", role: "admin" });
+await users.write("john", { role: "admin" });
 console.log(await users.index());
 
 await fdb.optimize();
@@ -66,7 +66,6 @@ All options are passed to `FilesDB` on creation.
 | `encoding` | `string`   | File encoding |
 | `encrypt(json, key)` | `function` | Must return string |
 | `decrypt(raw, key)` | `function` | Must return JSON string |
-| `getId(record)` | `function` | Extracts unique ID from record (default: `r => r.id`) |
 | `timeout` | `number` | Option will be passed as __ttl__ to [`@randajan/treelock`](https://www.npmjs.com/package/@randajan/treelock`) |
 | `on(thread, state)` | `function` | Hook from [`@randajan/treelock`](https://www.npmjs.com/package/@randajan/treelock`) |
 
@@ -168,34 +167,36 @@ Regenerates and re-encrypts all files using a new key.
 
 ### 🔹 FileDB
 
-#### `write(record: object): Promise<void>`  
+#### `write(id:string, body: object): Promise<void>`  
 **Async & Treelock protected**  
 Appends a single record. Requires the file to be readable.
 
-#### `writeSync(record: object): void`  
+_To delete record simple provide its id and no body (body==null)_
+
+#### `writeSync(id:string, body: object): void`
 **Synchronous**  
 Synchronous version of `write`.
 
-#### `map(fn: (record: object, id: string) => any): Promise<Array<any>>`  
+#### `map(fn: (body: object, id: string) => any): Promise<Array<any>>`  
 **Async & Treelock protected**  
 Iterates over all records, giving only the latest per ID.  
 
-#### `collect(obj: object, fn: (collector: object, record: object, id: string) => void): Promise<object>`  
+#### `collect(obj: object, fn: (collector: object, body: object, id: string) => void): Promise<object>`  
 **Async & Treelock protected**  
 Populates `obj` from all unique records.  
 
-#### `reduce(initialValue: any, fn: (result: any, record: object, id: string) => any): Promise<any>`  
+#### `reduce(initialValue: any, fn: (result: any, body: object, id: string) => any): Promise<any>`  
 **Async & Treelock protected**  
 Reduces over all unique records.  
 
 #### `values(): Promise<Array<object>>`  
-Alias for `map(record => record)`
+Alias for `map(body => body)`
 
 #### `keys(): Promise<Array<string>>`  
-Alias for `map((record, id) => id)`
+Alias for `map((body, id) => id)`
 
 #### `entries(): Promise<Array<[string, object]>>`  
-Alias for `map((record, id) => [id, record])`
+Alias for `map((body, id) => [id, body])`
 
 #### `index(): Promise<Record<string, object>>`  
 Collects records by ID.
@@ -220,7 +221,6 @@ Regenerates the file using a new key.
 
 ## 🧠 Notes
 
-- Records **must have an ID** (determined by `getId`) for deduplication and optimization.
 - `isReadable` is false until at least one successful `verify`, `map`, or `unlock`.
 - Errors during reading are stored in `error` and prevent writes.
 
