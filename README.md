@@ -2,69 +2,228 @@
 
 [![NPM](https://img.shields.io/npm/v/@randajan/file-db.svg)](https://www.npmjs.com/package/@randajan/file-db) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
 
-# FileDB
 
-FileDB is a simple Node.js library for working with a File-based Database. It allows secure storage and retrieval of JSON data in encrypted files using AES encryption.
+**FileDB** is a minimalistic file-based adapter for storing and retrieving records using append-only logs. It is not a database. It is a thin and efficient layer for handling records in plain files — optimized for performance, clarity, and simplicity.
 
-## Features
+---
 
-- Store and retrieve JSON data in encrypted files
-- Support for multiple encryption keys
-- Easy-to-use API for working with the File-based Database
+## 📌 Philosophy
 
-## Installation
+FileDB is not a database. It does not manage schemas, indexes, or validation. Instead, it provides:
 
-Install the library using npm:
+- **Raw access to record-based file logs**
+- **Encryption support** via user-defined `encrypt`/`decrypt`
+- **Per-record identification** for deduplication and optimization
+- **Thread-safe writes** using [`@randajan/treelock`](https://www.npmjs.com/package/@randajan/treelock)
 
-```
-npm install @randajan/file-db
-```
+You are responsible for data shape and logic. FileDB focuses solely on reliable, structured persistence.
 
-## Usage
+---
 
-```javascript
-import fdb, { FileDB } from '@randajan/file-db'; //default export 'fdb' is shorthand for 'new FileDB()'
+## 🚀 Example
 
-// Create a new instance of FileDB
-const fileDB = fdb({
-  root: '/path/to/database', // Root directory for the database
-  alias: 'mydb', // Optional alias for the database (default is the root directory name)
-  extension: '.fdb', // Optional file extension for the encrypted files (default is '.fdb')
-  key: 'mysecretkey', // Optional encryption current key
+```js
+import createFileDB from "@randajan/file-db";
+import CryptoJS from "crypto-js";
+
+const fdb = createFileDB({
+    dir: "./data",
+    extension: "fdb",
+    encrypt:(json, key) => {
+        if (!key) return json;
+        return CryptoJS.AES.encrypt(json, key).toString();
+    },
+    decrypt:(raw, key) => {
+        if (!key) return raw;
+        const bytes = CryptoJS.AES.decrypt(raw, key);
+        return bytes.toString(CryptoJS.enc.Utf8);
+    },
+    on: ({ name, ram }, state) => {
+        console.log(`${name} changed state to`, state, `(${ram} in queue)`);
+    }
 });
 
-// Save data to the database
-const data = { name: 'John Doe', age: 30 };
-await fileDB.save('user1', data);
+const users = fdb.link("users");
 
-// Load data from the database
-const loadedData = await fileDB.load('user1');
-console.log(loadedData); // { name: 'John Doe', age: 30 }
+await fdb.unlock("secret-key");
+
+await users.write({ id: "john", role: "admin" });
+console.log(await users.index());
+
+await fdb.optimize();
 ```
 
-## Multiple Encryption Keys
+---
 
-FileDB supports the use of multiple encryption keys. In the event that the current key is changed or lost, you can provide all possible keys to the FileDB instance. It will try its best to unlock all data using these keys. If a match is found, the data will be successfully decrypted and re-encrypted using the last provided current key.
-This feature solves two case scenarios:
+## ⚙️ Options
 
-1. current key is compromited or insecure - so you can change the key at runtime
-2. midtime changing current key server crashed - so you can provide multiple decryption keys and FileDB itself reencrypt all files with last current key
+All options are passed to `FilesDB` on creation.
 
-## Adding New Encryption Key
+| Option     | Type       | Description |
+|------------|------------|-------------|
+| `dir`     | `string`   | Root directory path |
+| `extension`| `string`   | File extension (without `.`) |
+| `encoding` | `string`   | File encoding |
+| `encrypt(json, key)` | `function` | Must return string |
+| `decrypt(raw, key)` | `function` | Must return JSON string |
+| `getId(record)` | `function` | Extracts unique ID from record (default: `r => r.id`) |
+| `timeout` | `number` | Option will be passed as __ttl__ to [`@randajan/treelock`](https://www.npmjs.com/package/@randajan/treelock`) |
+| `on(thread, state)` | `function` | Hook from [`@randajan/treelock`](https://www.npmjs.com/package/@randajan/treelock`) |
 
-You can add a new encryption key to the FileDB instance using the `addKey` method. This method allows you to add a new key while providing the current key for authentication. If the current key matches the existing key, the new key is added to the list of decryption keys. Optionally, you can choose to reencrypt all existing data with the new key to ensure data consistency and security.
+🔒 **Hooks must not be asynchronous.**
 
-```javascript
-// Example of adding a new encryption key
-const newKey = 'newsecretkey';
-const currentKey = 'mysecretkey';
-await fileDB.addKey(newKey, currentKey, true);
-```
+---
 
-## Contribution
+## 🔁 Inheritance
 
-Contributions are welcome! If you find any issues or have suggestions for improvements, feel free to open an issue or create a pull request.
+Options passed to `FilesDB` are inherited by default in `FileDB`. However, each file can override them individually when calling `.link(name, options)`.
 
-## License
+---
 
-MIT © [randajan](https://github.com/randajan)
+## 📘 FilesDB Properties
+
+| Property     | Type     | Description |
+|--------------|----------|-------------|
+| `dir`       | `string` | Root path |
+| `extension`  | `string` | File extension |
+| `encoding`   | `string` | File encoding |
+| `thread`     | `TreeLock` | See [`@randajan/treelock`](https://www.npmjs.com/package/@randajan/treelock) |
+
+---
+
+## 📘 FileDB Properties
+
+| Property     | Type     | Description |
+|--------------|----------|-------------|
+| `name`       | `string` | File name |
+| `fullname`   | `string` | Namespaced name (e.g. `MyDB.users`) |
+| `pathname`   | `string` | Full path to the file |
+| `isReadable` | `boolean`| Whether file is readable |
+| `error`      | `Error?` | Last read-related error |
+| `thread`     | `TreeLock` | See [`@randajan/treelock`](https://www.npmjs.com/package/@randajan/treelock) |
+
+---
+
+## 📚 API Overview
+
+This section provides a detailed explanation of all public methods of `FilesDB` and `FileDB`.
+
+---
+
+### 🔹 FilesDB
+
+#### `link(name: string, options?: object, throwError?: boolean): FileDB`  
+**Synchronous**  
+Links a file by name and returns its `FileDB` instance. Throws if already linked (unless `throwError` is false).
+
+#### `unlink(name: string, throwError?: boolean): boolean`  
+**Synchronous**  
+Unlinks a file. Throws if not linked (unless `throwError` is false).
+
+#### `get(name: string, throwError?: boolean): FileDB`  
+**Synchronous**  
+Returns the `FileDB` instance for a linked file. Throws if not linked (unless `throwError` is false).
+
+#### `map(fn: (file: FileDB, name: string) => any): Promise<Array<any>>`  
+**Asynchronous**  
+Runs the provided function on all linked files in parallel.  
+
+#### `collect(obj: object, fn: (collector: object, file: FileDB, name: string) => void): Promise<object>`  
+**Asynchronous**  
+Populates `obj` with data collected from all files.  
+
+#### `reduce(initialValue: any, fn: (result: any, file: FileDB) => any): Promise<any>`  
+**Asynchronous**  
+Applies a reducer over all files.  
+
+#### `values(): Promise<Array<FileDB>>`  
+Alias for `map(file => file)`
+
+#### `keys(): Promise<Array<string>>`  
+Alias for `map((file, name) => name)`
+
+#### `entries(): Promise<Array<[string, FileDB]>>`  
+Alias for `map((file, name) => [name, file])`
+
+#### `index(): Promise<Record<string, FileDB>>`  
+Collects all files into a dictionary.
+
+#### `verify(): Promise<{ isOk: boolean, errors?: [string, Error][] }>`  
+**Async & Treelock protected**  
+Checks readability of all linked files.
+
+#### `unlock(key: string): Promise<{ isOk: boolean, errors?: [string, Error][] }>`  
+**Async & Treelock protected**  
+Attempts to decrypt and verify all linked files with the provided key.
+
+#### `optimize(): Promise<{ isOk: boolean, errors?: [string, Error][] }>`  
+**Async & Treelock protected**  
+Regenerates all files to a compact form.
+
+#### `rekey(newKey: string): Promise<{ isOk: boolean, errors?: [string, Error][] }>`  
+**Async & Treelock protected**  
+Regenerates and re-encrypts all files using a new key.
+
+---
+
+### 🔹 FileDB
+
+#### `write(record: object): Promise<void>`  
+**Async & Treelock protected**  
+Appends a single record. Requires the file to be readable.
+
+#### `writeSync(record: object): void`  
+**Synchronous**  
+Synchronous version of `write`.
+
+#### `map(fn: (record: object, id: string) => any): Promise<Array<any>>`  
+**Async & Treelock protected**  
+Iterates over all records, giving only the latest per ID.  
+
+#### `collect(obj: object, fn: (collector: object, record: object, id: string) => void): Promise<object>`  
+**Async & Treelock protected**  
+Populates `obj` from all unique records.  
+
+#### `reduce(initialValue: any, fn: (result: any, record: object, id: string) => any): Promise<any>`  
+**Async & Treelock protected**  
+Reduces over all unique records.  
+
+#### `values(): Promise<Array<object>>`  
+Alias for `map(record => record)`
+
+#### `keys(): Promise<Array<string>>`  
+Alias for `map((record, id) => id)`
+
+#### `entries(): Promise<Array<[string, object]>>`  
+Alias for `map((record, id) => [id, record])`
+
+#### `index(): Promise<Record<string, object>>`  
+Collects records by ID.
+
+#### `verify(): Promise<void>`  
+**Async & Treelock protected**  
+Validates the file can be read and parsed. Throws if unreadable.
+
+#### `unlock(key: string): Promise<void>`  
+**Async & Treelock protected**  
+Attempts to decrypt and verify the file with the provided key.
+
+#### `optimize(): Promise<void>`  
+**Async & Treelock protected**  
+Compacts the file to remove duplicate entries.
+
+#### `rekey(newKey: string): Promise<void>`  
+**Async & Treelock protected**  
+Regenerates the file using a new key.
+
+---
+
+## 🧠 Notes
+
+- Records **must have an ID** (determined by `getId`) for deduplication and optimization.
+- `isReadable` is false until at least one successful `verify`, `map`, or `unlock`.
+- Errors during reading are stored in `error` and prevent writes.
+
+---
+
+MIT License • Made with ☕ by Jan / `@randajan`

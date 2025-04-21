@@ -1,11 +1,12 @@
 
 import path from "path";
-import fs from "fs/promises";
-import { _privates } from "../priv";
-import { FileDB } from "./FileDB";
-import { setLocks } from "../tools";
-import { regenerateFiles } from "../regenerator";
 import createLock from "@randajan/treelock";
+
+import { FileDB } from "./FileDB";
+import { _privates, setThreads } from "../static";
+import { regenerateFiles } from "../static/regenerate";
+import { verifyFiles } from "../static/verify";
+
 
 export class FilesDB {
     constructor(options = {}) {
@@ -13,7 +14,7 @@ export class FilesDB {
         _p.files = new Map();
 
         const name = _p.name = options.name ?? "FDB";
-        _p.root = options.root ?? ".";
+        _p.dir = options.dir ?? ".";
         _p.extension = options.extension ?? "fdb";
         _p.encoding = options.encoding ?? "utf8";
         _p.encrypt = options.encrypt ?? (json=>json);
@@ -21,11 +22,11 @@ export class FilesDB {
         _p.getId = options.getId ?? (rec=>rec.id);
         _p.key = options.key;
         const ttl = _p.timeout = options.timeout ?? 30000;
-        _p.thread = createLock({ name, ttl });
+        _p.thread = createLock({ name, ttl, on:options.on });
 
         const enumerable = true;
         Object.defineProperties(this, {
-            root: { enumerable, value: _p.root },
+            dir: { enumerable, value: _p.dir },
             extension: { enumerable, value: _p.extension },
             encoding: { enumerable, value: _p.encoding },
             thread:{ value:_p.thread }
@@ -33,10 +34,10 @@ export class FilesDB {
 
         _privates.set(this, _p);
 
-        setLocks(_p.thread, this, "optimize", "lock");
+        setThreads(_p.thread, this, "verify", "unlock", "optimize", "rekey");
     }
 
-    toPathname(name) { return path.join(this.root, `${name}.${this.extension}`); }
+    toPathname(name) { return path.join(this.dir, `${name}.${this.extension}`); }
 
     link(name, options={}, throwError=true) {
         const { files } = _privates.get(this);
@@ -83,13 +84,9 @@ export class FilesDB {
     async index() { return this.collect({}, (c, file, name) => c[name] = file); }
 
 
-    async unlock(key) {
-        const _p = _privates.get(this);
-        _p.keys.add(key);
-        return this;
-    }
+    async verify() { return verifyFiles(this); }
+    async unlock(key) { return verifyFiles(this, true, key); }
 
-    async lock(newKey) { return regenerateFiles(this, true, newKey); }
-    
     async optimize() { return regenerateFiles(this); }
+    async rekey(newKey) { return regenerateFiles(this, true, newKey); }
 }

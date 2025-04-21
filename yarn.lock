@@ -145,10 +145,10 @@
   resolved "https://registry.yarnpkg.com/@randajan/sleep/-/sleep-0.1.0.tgz#ee02475a0a096d08fc5919959e8dab23529c7027"
   integrity sha512-4UKMrnTxmHNlaDnx8DVa6vftzKaE8bGADmI4yIeb8TmguzlP5KG/O3hXrk3fOkqF1UtOkrXMC2KVQAFz8lxdEg==
 
-"@randajan/treelock@^0.1.0":
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/@randajan/treelock/-/treelock-0.1.0.tgz#6aacd1f60bd266c7eb6a60111b744709549f02c8"
-  integrity sha512-iDoMcfiTIH4LAe8Ttvzj0l34vHR5HM5itB3FcuhIueOG9dJOiMpXfrQeDQgLLIPXX+6NUcV0eHWSXeaXl8zdVg==
+"@randajan/treelock@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@randajan/treelock/-/treelock-0.2.0.tgz#bce2b239828dd880ba4abf9098aa7c9dbf9209b8"
+  integrity sha512-Bem9Oy0I+d/xc3zypHROotJd9xkFNO6nPvwXF+I/AazqCp7bOjw+0SoC0/J9OJAO+94cJNrl4JHD+huPHEALrA==
   dependencies:
     "@randajan/sleep" "^0.1.0"
 

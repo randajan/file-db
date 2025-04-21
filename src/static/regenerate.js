@@ -1,7 +1,6 @@
-import fs from "fs/promises";
-import { _privates } from "./priv";
-import { removeFile } from "./tools";
-import { mapFile } from "./reader";
+import fsp from "fs/promises";
+import { _privates, removeFile } from ".";
+import { mapFile } from "./map";
 
 const _regenerateFile = async (file, isReKey, key)=>{
     const _p = _privates.get(file);
@@ -17,13 +16,13 @@ const _regenerateFile = async (file, isReKey, key)=>{
         exit:ok=>{
             if (!ok) { return removeFile(tmpPath); }
             _p.key = key;
-            return fs.rename(tmpPath, pathname);
+            return fsp.rename(tmpPath, pathname);
         }
     }
 
     try {
         const lines = await mapFile(file, encode);
-        await fs.writeFile(tmpPath, lines.join("\n") + "\n", encoding);
+        await fsp.writeFile(tmpPath, lines.join("\n") + "\n", encoding);
     } catch(err) {
         res.isOk = false;
         res.error = err.message || err;
@@ -35,7 +34,7 @@ const _regenerateFile = async (file, isReKey, key)=>{
 export const regenerateFile = async (file, isReKey, key)=>{
     const res = await _regenerateFile(file, isReKey, key);
     await res.exit(res.isOk);
-    return res.error;
+    if (!res.isOk) { throw res.error; }
 }
 
 export const regenerateFiles = async (fdb, isReKey, key)=>{
@@ -50,5 +49,5 @@ export const regenerateFiles = async (fdb, isReKey, key)=>{
     const isOk = !errors.length;
     await Promise.all(act.map(r=>r.exit(isOk)));
     
-    if (!isOk) { return errors; }
+    return isOk ? { isOk } : { isOk, errors };
 }

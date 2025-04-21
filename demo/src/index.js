@@ -1,5 +1,5 @@
 import { info, log } from "@randajan/simple-lib/node";
-import { FilesDB } from "../../dist/esm/index.mjs";
+import createFileDB from "../../dist/esm/index.mjs";
 import CryptoJS from "crypto-js";
 
 export const encrypt = (json, key) => {
@@ -13,25 +13,28 @@ export const decrypt = (raw, key) => {
     return bytes.toString(CryptoJS.enc.Utf8); // výstup je původní string
 };
 
-const fdb = new FilesDB({
-    root: info.dir.root + "\\demo\\fdb", // Root directory for the database
+const fdb = createFileDB({
+    dir: info.dir.root + "\\demo\\fdb", // Root directory for the database
     extension: 'fdb', // Optional file extension for the encrypted files
-    // encrypt,
-    // decrypt,
-    // key:"xxx"
+    encrypt,
+    decrypt,
+    on:({name, ram}, state)=>{ console.log(name, state, ram); }
 });
 
 const users = fdb.link("users");
+const tasks = fdb.link("tasks");
 
 
 (async ()=>{
-    //fdb.addKey("srre");
+    console.log("xxx", await fdb.unlock("X"));
 
-    const usr = await users.index();
-    console.log("A", usr);
-    await users.write({ id:"foo", value:"bak" });
+    await Promise.all([
+        ...Array(100).fill("").map((_, i)=>users.write({ id:"user"+i, value:"value"+i })),
+        ...Array(100).fill("").map((_, i)=>tasks.write({ id:"user"+i, value:"value"+i }))
+    ]);
+
     console.log("B", await users.index());
     //console.log(await fdb.addKey("srre"));
-    await users.optimize();
+    await fdb.optimize();
     console.log("exit")
 })();
