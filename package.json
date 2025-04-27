@@ -36,6 +36,6 @@
   },
   "dependencies": {
     "@randajan/sleep": "^0.1.0",
-    "@randajan/treelock": "^0.2.0"
+    "@randajan/treelock": "^0.3.1"
   }
 }
